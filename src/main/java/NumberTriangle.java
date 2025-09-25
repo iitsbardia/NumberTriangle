@@ -88,8 +88,23 @@ public class NumberTriangle {
      *
      */
     public int retrieve(String path) {
-        // TODO implement this method
-        return -1;
+        NumberTriangle current = this;
+
+        for (char direction : path.toCharArray()) {
+            if (direction == 'l') {
+                current = current.left;
+            } else if (direction == 'r') {
+                current = current.right;
+            } else {
+                throw new IllegalArgumentException("Invalid character in path: " + direction);
+            }
+
+            if (current == null) {
+                throw new IllegalStateException("Path leads to a null node.");
+            }
+        }
+
+        return current.root;
     }
 
     /** Read in the NumberTriangle structure from a file.
@@ -104,32 +119,43 @@ public class NumberTriangle {
      * @throws IOException may naturally occur if an issue reading the file occurs
      */
     public static NumberTriangle loadTriangle(String fname) throws IOException {
-        // open the file and get a BufferedReader object whose methods
-        // are more convenient to work with when reading the file contents.
         InputStream inputStream = NumberTriangle.class.getClassLoader().getResourceAsStream(fname);
         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
 
-
-        // TODO define any variables that you want to use to store things
-
-        // will need to return the top of the NumberTriangle,
-        // so might want a variable for that.
-        NumberTriangle top = null;
+        // First, read all lines and store them in a temporary array
+        String[] lines = new String[100]; // assuming max 100 lines; adjust if needed
+        int lineCount = 0;
 
         String line = br.readLine();
         while (line != null) {
-
-            // remove when done; this line is included so running starter code prints the contents of the file
             System.out.println(line);
-
-            // TODO process the line
-
-            //read the next line
+            lines[lineCount++] = line;
             line = br.readLine();
         }
         br.close();
-        return top;
+
+        // Create a 2D array of NumberTriangle nodes
+        NumberTriangle[][] triangle = new NumberTriangle[lineCount][];
+        for (int i = 0; i < lineCount; i++) {
+            String[] tokens = lines[i].trim().split("\\s+");
+            triangle[i] = new NumberTriangle[tokens.length];
+            for (int j = 0; j < tokens.length; j++) {
+                triangle[i][j] = new NumberTriangle(Integer.parseInt(tokens[j]));
+            }
+        }
+
+        // Link children from bottom to top
+        for (int i = lineCount - 2; i >= 0; i--) {
+            for (int j = 0; j < triangle[i].length; j++) {
+                triangle[i][j].setLeft(triangle[i + 1][j]);
+                triangle[i][j].setRight(triangle[i + 1][j + 1]);
+            }
+        }
+
+        // Return the top node
+        return triangle[0][0];
     }
+
 
     public static void main(String[] args) throws IOException {
 
